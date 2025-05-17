@@ -1,0 +1,264 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    {% if assignment_view %}
+        Course Assignments
+    {% else %}
+        Courses Management
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if assignment_view %}
+        Course Assignments
+    {% else %}
+        Courses Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if assignment_view %}
+        <!-- Course Assignment View -->
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Assign Course</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('assign_courses') }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.class_id.label(class="form-label") }}
+                                {{ form.class_id(class="form-select") }}
+                                {% if form.class_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.class_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.teacher_id.label(class="form-label") }}
+                                {{ form.teacher_id(class="form-select") }}
+                                {% if form.teacher_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.teacher_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.course_id.label(class="form-label") }}
+                                {{ form.course_id(class="form-select") }}
+                                {% if form.course_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.course_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Course Assignments</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if assignments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Class</th>
+                                            <th>Course</th>
+                                            <th>Teacher</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for assignment, class_obj, teacher, course in assignments %}
+                                            <tr>
+                                                <td>{{ class_obj.name }}</td>
+                                                <td>{{ course.name }} {% if course.code %}({{ course.code }}){% endif %}</td>
+                                                <td>{{ teacher.name }}</td>
+                                                <td>
+                                                    {% if course.is_lab and course.is_lecture %}
+                                                        <span class="badge bg-info me-1">Lab & Lecture</span>
+                                                    {% elif course.is_lab %}
+                                                        <span class="badge bg-primary">Lab</span>
+                                                    {% elif course.is_lecture %}
+                                                        <span class="badge bg-success">Lecture</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">None</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <form id="delete-assignment-form-{{ assignment.id }}" 
+                                                          action="{{ url_for('delete_assignment', assignment_id=assignment.id) }}" 
+                                                          method="POST" class="d-inline">
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="confirmDelete('delete-assignment-form-{{ assignment.id }}', 'assignment')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                No course assignments yet. Assign courses using the form.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Course Management View -->
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Course</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('courses') }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="Enter course name") }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.code.label(class="form-label") }}
+                                {{ form.code(class="form-control", placeholder="Enter course code (optional)") }}
+                                {% if form.code.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card mb-3">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Course Type</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-2">
+                                                {{ form.is_lecture(class="form-check-input") }}
+                                                {{ form.is_lecture.label(class="form-check-label") }}
+                                                <small class="form-text text-muted d-block">
+                                                    Lecture sessions are 55 minutes.
+                                                </small>
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.lecture_hours.label(class="form-label") }}
+                                                {{ form.lecture_hours(class="form-control", placeholder="Enter number of hours per week") }}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mb-2">
+                                                {{ form.is_lab(class="form-check-input") }}
+                                                {{ form.is_lab.label(class="form-check-label") }}
+                                                <small class="form-text text-muted d-block">
+                                                    Lab sessions are 110 minutes (double period).
+                                                </small>
+                                            </div>
+                                            <div class="mb-3">
+                                                {{ form.lab_hours.label(class="form-label") }}
+                                                {{ form.lab_hours(class="form-control", placeholder="Enter number of hours per week") }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-book me-2"></i>Courses</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if courses %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Code</th>
+                                            <th>Type</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for course in courses %}
+                                            <tr>
+                                                <td>{{ course.id }}</td>
+                                                <td>{{ course.name }}</td>
+                                                <td>{{ course.code or '-' }}</td>
+                                                <td>
+                                                    {% if course.is_lab and course.is_lecture %}
+                                                        <span class="badge badge-lab me-1">Lab ({{ course.lab_hours }} hrs/week)</span>
+                                                        <span class="badge badge-lecture">Lecture ({{ course.lecture_hours }} hrs/week)</span>
+                                                    {% elif course.is_lab %}
+                                                        <span class="badge badge-lab">Lab ({{ course.lab_hours }} hrs/week)</span>
+                                                    {% elif course.is_lecture %}
+                                                        <span class="badge badge-lecture">Lecture ({{ course.lecture_hours }} hrs/week)</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">None</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <form id="delete-course-form-{{ course.id }}" 
+                                                          action="{{ url_for('delete_course', course_id=course.id) }}" 
+                                                          method="POST" class="d-inline">
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="confirmDelete('delete-course-form-{{ course.id }}', 'course')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                No courses added yet. Add a course using the form.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}

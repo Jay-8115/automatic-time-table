@@ -1,0 +1,291 @@
+{% extends 'layout.html' %}
+
+{% block title %}Timetable - {{ class_obj.name }}{% endblock %}
+
+{% block page_title %}
+    <a href="{{ url_for('timetable') }}" class="btn btn-sm btn-outline-secondary me-2">
+        <i class="fas fa-arrow-left"></i> Back to Timetables
+    </a>
+    Timetable for {{ class_obj.name }}
+{% endblock %}
+
+{% block additional_head %}
+    <style>
+        .timetable th, .timetable td {
+            min-width: 120px;
+        }
+        
+        .break-cell {
+            background-color: var(--bs-info-bg-subtle);
+        }
+        
+        .lab-cell {
+            background-color: var(--bs-warning-bg-subtle);
+        }
+        
+        .lecture-cell {
+            background-color: var(--bs-light);
+        }
+        
+        .time-slot {
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        
+        .course-name {
+            font-weight: bold;
+        }
+        
+        .teacher-name {
+            font-size: 0.85rem;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h4>{{ class_obj.name }} Timetable</h4>
+        <p class="text-muted">
+            <i class="fas fa-info-circle me-1"></i> 
+            Labs are scheduled at the same time for all sections, but with different teachers. 
+            Lectures are identical across all sections.
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button id="export-pdf" class="btn btn-secondary">
+            <i class="fas fa-file-pdf me-2"></i>Export as PDF
+        </button>
+        <form id="generate-form" method="POST" action="{{ url_for('generate_timetable_for_class', class_id=class_obj.id) }}" class="d-inline">
+            <button type="button" class="btn btn-primary" onclick="if(confirm('This will regenerate the entire timetable. Continue?')) this.form.submit();">
+                <i class="fas fa-sync-alt me-2"></i>Regenerate
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-header-tabs" id="section-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" 
+                           id="consolidated-tab" 
+                           data-bs-toggle="tab" 
+                           href="#consolidated" 
+                           role="tab" 
+                           aria-controls="consolidated" 
+                           aria-selected="true">
+                            <i class="fas fa-table me-1"></i> Class Timetable
+                        </a>
+                    </li>
+                    {% for section in sections %}
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" 
+                           id="section-{{ section.id }}-tab" 
+                           data-bs-toggle="tab" 
+                           href="#section-{{ section.id }}" 
+                           role="tab" 
+                           aria-controls="section-{{ section.id }}" 
+                           aria-selected="false">
+                            Section {{ section.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="section-tab-content">
+                    <!-- Consolidated Class Timetable -->
+                    <div class="tab-pane fade show active" 
+                         id="consolidated" 
+                         role="tabpanel" 
+                         aria-labelledby="consolidated-tab">
+                        
+                        <div class="timetable-container">
+                            <table class="table table-bordered timetable">
+                                <thead>
+                                    <tr>
+                                        <th>Time / Day</th>
+                                        {% for day in days %}
+                                            <th>{{ day.name }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for slot in time_slots %}
+                                        <tr>
+                                            <td class="time-slot">
+                                                {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                                                {% if slot.is_break %}
+                                                    <br><span class="badge bg-info">Break</span>
+                                                {% endif %}
+                                            </td>
+                                            
+                                            {% for day in days %}
+                                                {% if slot.is_break %}
+                                                    <td class="break-cell">
+                                                        <em>Break Time</em>
+                                                    </td>
+                                                {% else %}
+                                                    {% set cell_data = consolidated_timetable[day.id][slot.id] %}
+                                                    
+                                                    {% if cell_data.common %}
+                                                        <!-- Common lecture for all sections -->
+                                                        <td class="lecture-cell">
+                                                            <div class="course-name">
+                                                                {{ cell_data.common.course }}
+                                                                {% if cell_data.common.course_code %}
+                                                                    ({{ cell_data.common.course_code }})
+                                                                {% endif %}
+                                                                <span class="badge bg-success">Lecture</span>
+                                                            </div>
+                                                            <div class="teacher-name">
+                                                                <i class="fas fa-user-tie me-1"></i> {{ cell_data.common.teacher }}
+                                                            </div>
+                                                            <small class="text-muted">All sections</small>
+                                                        </td>
+                                                    {% elif cell_data.sections and cell_data.sections|length > 0 %}
+                                                        <!-- Lab sessions (different for each section) -->
+                                                        <td class="lab-cell">
+                                                            <div class="course-name">
+                                                                {% set first_section = sections|first %}
+                                                                {% if first_section.id in cell_data.sections %}
+                                                                    {{ cell_data.sections[first_section.id].course }}
+                                                                    {% if cell_data.sections[first_section.id].course_code %}
+                                                                        ({{ cell_data.sections[first_section.id].course_code }})
+                                                                    {% endif %}
+                                                                {% else %}
+                                                                    {% set some_section = cell_data.sections.keys()|list|first %}
+                                                                    {{ cell_data.sections[some_section].course }}
+                                                                    {% if cell_data.sections[some_section].course_code %}
+                                                                        ({{ cell_data.sections[some_section].course_code }})
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                                <span class="badge bg-primary">Lab</span>
+                                                            </div>
+                                                            <div class="teacher-assignments">
+                                                                <small>Teacher assignments:</small>
+                                                                <ul class="mb-0 ps-3">
+                                                                    {% for section in sections %}
+                                                                        {% if section.id in cell_data.sections %}
+                                                                            <li><small>Section {{ section.name }}: {{ cell_data.sections[section.id].teacher }}</small></li>
+                                                                        {% endif %}
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    {% else %}
+                                                        <td class="empty-cell">-</td>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Individual Section Timetables -->
+                    {% for section in sections %}
+                    <div class="tab-pane fade" 
+                         id="section-{{ section.id }}" 
+                         role="tabpanel" 
+                         aria-labelledby="section-{{ section.id }}-tab">
+                        
+                        <div class="timetable-container">
+                            <table class="table table-bordered timetable">
+                                <thead>
+                                    <tr>
+                                        <th>Time / Day</th>
+                                        {% for day in days %}
+                                            <th>{{ day.name }}</th>
+                                        {% endfor %}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for slot in time_slots %}
+                                        <tr>
+                                            <td class="time-slot">
+                                                {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                                                {% if slot.is_break %}
+                                                    <br><span class="badge bg-info">Break</span>
+                                                {% endif %}
+                                            </td>
+                                            
+                                            {% for day in days %}
+                                                {% set cell_data = section_timetables[section.id][day.id][slot.id] %}
+                                                
+                                                {% if slot.is_break %}
+                                                    <td class="break-cell">
+                                                        <em>Break Time</em>
+                                                    </td>
+                                                {% elif cell_data %}
+                                                    <td class="{% if cell_data.is_lab %}lab-cell{% else %}lecture-cell{% endif %}">
+                                                        <div class="course-name">
+                                                            {{ cell_data.course }}
+                                                            {% if cell_data.is_lab %}
+                                                                <span class="badge badge-lab">Lab</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="teacher-name">
+                                                            <i class="fas fa-user-tie me-1"></i> {{ cell_data.teacher }}
+                                                        </div>
+                                                    </td>
+                                                {% else %}
+                                                    <td class="empty-cell">-</td>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Legend</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 30px; height: 30px;" class="lecture-cell border me-2"></div>
+                            <span>Regular Lecture (55 minutes)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 30px; height: 30px;" class="lab-cell border me-2"></div>
+                            <span>Lab Session (110 minutes)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="d-flex align-items-center">
+                            <div style="width: 30px; height: 30px;" class="break-cell border me-2"></div>
+                            <span>Break Time</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{{ url_for('static', filename='js/timetable.js') }}"></script>
+{% endblock %}

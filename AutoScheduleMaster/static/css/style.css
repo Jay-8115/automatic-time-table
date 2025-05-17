@@ -1,0 +1,171 @@
+/* Custom styles beyond Bootstrap */
+
+/* Main layout styles */
+body {
+    padding-top: 56px; /* For fixed navbar */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding: 2rem 0;
+}
+
+footer {
+    margin-top: auto;
+    padding: 1rem 0;
+    background-color: var(--bs-dark);
+    color: var(--bs-light);
+}
+
+/* Dashboard card styles */
+.dashboard-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-card .card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Form styles */
+.form-card {
+    margin-bottom: 2rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-card .card-header {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+/* Timetable styles */
+.timetable-container {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+}
+
+.timetable {
+    min-width: 800px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.timetable th, .timetable td {
+    padding: 10px;
+    text-align: center;
+    border: 1px solid var(--bs-border-color);
+}
+
+.timetable th {
+    background-color: var(--bs-secondary-bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.timetable th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 11;
+}
+
+.timetable td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 9;
+    background-color: var(--bs-secondary-bg);
+    font-weight: bold;
+}
+
+.timetable .break-cell {
+    background-color: var(--bs-info-bg-subtle);
+    font-style: italic;
+}
+
+.timetable .lab-cell {
+    background-color: var(--bs-warning-bg-subtle);
+}
+
+.timetable .lecture-cell {
+    background-color: var(--bs-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .dashboard-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+/* Animation for flash messages */
+.alert-dismissible {
+    transition: opacity 0.5s ease-out;
+}
+
+/* Custom badge styles */
+.badge-lab {
+    background-color: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text);
+}
+
+.badge-lecture {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text);
+}
+
+/* Custom styles for nav tabs */
+.nav-tabs .nav-link {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+}
+
+/* Teacher and Course list styles */
+.entity-list-item {
+    transition: background-color 0.2s ease;
+}
+
+.entity-list-item:hover {
+    background-color: var(--bs-secondary-bg-subtle);
+}
+
+/* Action buttons */
+.btn-action {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+/* Adding some responsive padding/margin utilities */
+.responsive-padding {
+    padding: 1rem;
+}
+
+@media (min-width: 768px) {
+    .responsive-padding {
+        padding: 2rem;
+    }
+}
+
+.section-title {
+    margin-bottom: 2rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--bs-primary);
+}

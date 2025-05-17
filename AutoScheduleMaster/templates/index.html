@@ -1,0 +1,237 @@
+{% extends 'layout.html' %}
+
+{% block title %}Timetable Generator - Home{% endblock %}
+
+{% block page_title %}Welcome to Timetable Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card border-0 bg-primary text-white">
+            <div class="card-body">
+                <h2 class="card-title"><i class="fas fa-info-circle me-2"></i>About This App</h2>
+                <p class="card-text">
+                    This is an automatic timetable generator for educational institutions. It handles multiple classes, sections, courses, teachers, 
+                    and special constraints like lab sessions and fixed breaks.
+                </p>
+                <p class="card-text">
+                    <strong>Features:</strong>
+                </p>
+                <ul>
+                    <li>Create and manage multiple classes and sections</li>
+                    <li>Add and manage teachers and courses</li>
+                    <li>Automatically generate timetables with constraint handling</li>
+                    <li>Labs (110 minutes) and regular lectures (55 minutes)</li>
+                    <li>Fixed schedule (7:30 AM - 1:40 PM)</li>
+                    <li>Scheduled breaks (9:20-9:50 AM and 11:40-11:50 AM)</li>
+                    <li>All sections of a class have labs at the same time (synchronized)</li>
+                    <li>Lectures are identical for all sections of a class</li>
+                    <li>Export timetables as PDF</li>
+                </ul>
+                {% if not current_user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{{ url_for('login') }}" class="btn btn-light me-2">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-light">
+                        <i class="fas fa-user-plus me-1"></i> Register
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if current_user.is_authenticated %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h3 class="section-title"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h3>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Classes Card -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="card-icon text-primary">
+                    <i class="fas fa-school"></i>
+                </div>
+                <h5 class="card-title">Classes</h5>
+                <p class="card-text display-4">{{ class_count }}</p>
+                <a href="{{ url_for('classes') }}" class="btn btn-sm btn-primary mt-3">
+                    <i class="fas fa-arrow-right me-1"></i> Manage Classes
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sections Card -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="card-icon text-success">
+                    <i class="fas fa-layer-group"></i>
+                </div>
+                <h5 class="card-title">Sections</h5>
+                <p class="card-text display-4">{{ section_count }}</p>
+                <a href="{{ url_for('classes') }}" class="btn btn-sm btn-success mt-3">
+                    <i class="fas fa-arrow-right me-1"></i> Manage Sections
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teachers Card -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="card-icon text-info">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h5 class="card-title">Teachers</h5>
+                <p class="card-text display-4">{{ teacher_count }}</p>
+                <a href="{{ url_for('teachers') }}" class="btn btn-sm btn-info mt-3">
+                    <i class="fas fa-arrow-right me-1"></i> Manage Teachers
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Courses Card -->
+    <div class="col-md-3 col-sm-6 mb-4">
+        <div class="card dashboard-card h-100">
+            <div class="card-body text-center">
+                <div class="card-icon text-warning">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h5 class="card-title">Courses</h5>
+                <p class="card-text display-4">{{ course_count }}</p>
+                <a href="{{ url_for('courses') }}" class="btn btn-sm btn-warning mt-3">
+                    <i class="fas fa-arrow-right me-1"></i> Manage Courses
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Getting Started</h5>
+            </div>
+            <div class="card-body">
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Add Classes and Sections</div>
+                            Create all the classes and add sections for each class.
+                        </div>
+                        <a href="{{ url_for('classes') }}" class="btn btn-sm btn-outline-primary">Go</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Add Teachers</div>
+                            Register all the teachers who will be teaching.
+                        </div>
+                        <a href="{{ url_for('teachers') }}" class="btn btn-sm btn-outline-primary">Go</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Add Courses</div>
+                            Add all the courses and mark which ones are lab sessions.
+                        </div>
+                        <a href="{{ url_for('courses') }}" class="btn btn-sm btn-outline-primary">Go</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Assign Courses</div>
+                            Assign courses to classes with teachers.
+                        </div>
+                        <a href="{{ url_for('assign_courses') }}" class="btn btn-sm btn-outline-primary">Go</a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-start">
+                        <div class="ms-2 me-auto">
+                            <div class="fw-bold">Generate Timetables</div>
+                            Generate timetables for all classes.
+                        </div>
+                        <a href="{{ url_for('timetable') }}" class="btn btn-sm btn-outline-primary">Go</a>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cog me-2"></i>System Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">School Hours</h6>
+                            <span class="badge bg-primary">Fixed</span>
+                        </div>
+                        <p class="mb-1">7:30 AM - 1:40 PM</p>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Break Times</h6>
+                            <span class="badge bg-primary">Fixed</span>
+                        </div>
+                        <p class="mb-1">
+                            Break 1: 9:20 AM - 9:50 AM (30 minutes)<br>
+                            Break 2: 11:40 AM - 11:50 AM (10 minutes)
+                        </p>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Period Duration</h6>
+                            <span class="badge bg-primary">Fixed</span>
+                        </div>
+                        <p class="mb-1">
+                            Regular Lecture: 55 minutes<br>
+                            Lab Session: 110 minutes (double period)
+                        </p>
+                    </div>
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">Scheduling Rule</h6>
+                            <span class="badge bg-info">Info</span>
+                        </div>
+                        <p class="mb-1">
+                            When one section has a lab, all sections of that class will have the lab at the same time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row mt-5">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Log in to Get Started</h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Please log in or register to access the timetable generator system.</p>
+                <div class="d-grid gap-2 col-6 mx-auto">
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-1"></i> Login
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus me-1"></i> Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

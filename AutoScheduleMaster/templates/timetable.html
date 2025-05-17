@@ -1,0 +1,186 @@
+{% extends 'layout.html' %}
+
+{% block title %}Timetable Management{% endblock %}
+
+{% block page_title %}Timetable Management{% endblock %}
+
+{% block additional_head %}
+    <style>
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Generate Timetable</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>
+                            <strong>Generate a new timetable for a class.</strong> This will create a complete schedule for all sections of the class based on the assigned courses and teachers.
+                        </p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> Generating a new timetable will replace any existing timetable for this class.
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <form id="generate-form" method="POST" action="#">
+                            <div class="mb-3">
+                                <label for="class-select" class="form-label">Select Class</label>
+                                <select id="class-select" class="form-select">
+                                    <option value="">-- Select a class --</option>
+                                    {% for class_obj in classes %}
+                                        <option value="{{ class_obj.id }}">{{ class_obj.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="button" id="generate-timetable" class="btn btn-primary">
+                                <i class="fas fa-magic me-2"></i>Generate Timetable
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-eye me-2"></i>View Timetables</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>
+                            <strong>View timetables for all classes.</strong> Select a class to view its timetable for all sections.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="view-class-select" class="form-label">Select Class</label>
+                            <select id="view-class-select" class="form-select">
+                                <option value="">-- Select a class --</option>
+                                {% for class_obj in classes %}
+                                    <option value="{{ class_obj.id }}">{{ class_obj.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <a id="view-timetable-btn" href="#" class="btn btn-info">
+                            <i class="fas fa-eye me-2"></i>View Timetable
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Timetable Generation Guide</h5>
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="timetableGuideAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                How Timetable Generation Works
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" 
+                             data-bs-parent="#timetableGuideAccordion">
+                            <div class="accordion-body">
+                                <p>The timetable generation algorithm follows these steps:</p>
+                                <ol>
+                                    <li>Gather all sections, assigned courses, and teachers for the selected class</li>
+                                    <li>Schedule lab sessions first (they're harder to place due to their double-period length)</li>
+                                    <li>When scheduling labs, all sections of the class get the same lab at the same time</li>
+                                    <li>Schedule regular lectures for each section</li>
+                                    <li>Avoid teacher conflicts (no teacher can be in two places at once)</li>
+                                    <li>Respect predefined breaks (9:20-9:50 AM and 11:40-11:50 AM)</li>
+                                    <li>Consider the start time (7:30 AM) and end time (1:40 PM)</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Prerequisites for Timetable Generation
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" 
+                             data-bs-parent="#timetableGuideAccordion">
+                            <div class="accordion-body">
+                                <p>Before generating a timetable, ensure you have:</p>
+                                <ul>
+                                    <li>Created the class and its sections</li>
+                                    <li>Added all required teachers</li>
+                                    <li>Added all courses (both regular and lab)</li>
+                                    <li>Assigned courses to the class with appropriate teachers</li>
+                                </ul>
+                                <p>Missing any of these steps may result in an incomplete or invalid timetable.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                    data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Troubleshooting Tips
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" 
+                             data-bs-parent="#timetableGuideAccordion">
+                            <div class="accordion-body">
+                                <p>If you encounter issues with timetable generation:</p>
+                                <ul>
+                                    <li>Ensure you don't have too many lab sessions that can't fit in the available time</li>
+                                    <li>Check that teachers aren't assigned to too many courses simultaneously</li>
+                                    <li>Verify that all required courses are assigned to the class</li>
+                                    <li>If you see warning messages, review them for specific issues</li>
+                                    <li>Try regenerating the timetable - there's some randomness in the placement algorithm</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_scripts %}
+<script src="{{ url_for('static', filename='js/timetable.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update the view timetable button URL when selection changes
+        const viewClassSelect = document.getElementById('view-class-select');
+        const viewTimetableBtn = document.getElementById('view-timetable-btn');
+        
+        viewClassSelect.addEventListener('change', function() {
+            const classId = this.value;
+            if (classId) {
+                viewTimetableBtn.href = `/view-timetable/${classId}`;
+            } else {
+                viewTimetableBtn.href = '#';
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    {% if section_view %}
+        Sections - {{ class_obj.name }}
+    {% else %}
+        Classes Management
+    {% endif %}
+{% endblock %}
+
+{% block page_title %}
+    {% if section_view %}
+        <a href="{{ url_for('classes') }}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left"></i> Back to Classes
+        </a>
+        Sections for {{ class_obj.name }}
+    {% else %}
+        Classes Management
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if section_view %}
+        <!-- Section Management View -->
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Section</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('sections', class_id=class_obj.id) }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="e.g., A, B, C") }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Sections</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if sections %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Section Name</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for section in sections %}
+                                            <tr>
+                                                <td>{{ section.id }}</td>
+                                                <td>{{ section.name }}</td>
+                                                <td>
+                                                    <form id="delete-section-form-{{ section.id }}" 
+                                                          action="{{ url_for('delete_section', section_id=section.id) }}" 
+                                                          method="POST" class="d-inline">
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="confirmDelete('delete-section-form-{{ section.id }}', 'section')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                No sections added yet for this class. Add sections using the form.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Class Management View -->
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Class</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('classes') }}">
+                            {{ form.hidden_tag() }}
+                            <div class="mb-3">
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="e.g., Class 10, XII Science") }}
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-school me-2"></i>Classes</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if classes %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Class Name</th>
+                                            <th>Sections</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for class_obj in classes %}
+                                            <tr>
+                                                <td>{{ class_obj.id }}</td>
+                                                <td>{{ class_obj.name }}</td>
+                                                <td>
+                                                    {% if class_obj.sections %}
+                                                        <span class="badge bg-primary">{{ class_obj.sections|length }}</span>
+                                                    {% else %}
+                                                        <span class="badge bg-secondary">0</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>
+                                                    <a href="{{ url_for('sections', class_id=class_obj.id) }}" 
+                                                       class="btn btn-sm btn-info">
+                                                        <i class="fas fa-layer-group"></i> Sections
+                                                    </a>
+                                                    <form id="delete-class-form-{{ class_obj.id }}" 
+                                                          action="{{ url_for('delete_class', class_id=class_obj.id) }}" 
+                                                          method="POST" class="d-inline">
+                                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                                onclick="confirmDelete('delete-class-form-{{ class_obj.id }}', 'class')">
+                                                            <i class="fas fa-trash"></i> Delete
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="alert">
+                                No classes added yet. Add a class using the form.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
